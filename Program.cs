@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+
 namespace MagnetTools
 {
     class Program
@@ -8,7 +10,20 @@ namespace MagnetTools
             string input = string.Empty;
             if(args.Length > 1 && !string.IsNullOrWhiteSpace(args[1]))
             {
-                input = args[1];
+                if (args[1] == "-F")
+                {
+                    if (args.Length > 2)
+                    {
+                        input = args[2];
+                        LoadFile(input);
+                    }
+                }
+                else
+                {
+                    input = args[1];
+                    MagnetURI link = new MagnetURI(input);
+                    link.printReadout();
+                }
             }
             if (string.IsNullOrWhiteSpace(input))
             {
@@ -16,6 +31,24 @@ namespace MagnetTools
                 input = Console.ReadLine();
                 MagnetURI link = new MagnetURI(input);
                 link.printReadout();
+            }
+        }
+        private static void LoadFile(string fileName)
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines(fileName);
+                MagnetURI link = new MagnetURI();
+                foreach (string s in lines)
+                {
+                    link.setLink(s);
+                    link.printJson();
+                }
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("Error reading file {0}",fileName);
+                Console.WriteLine(e.Message);
             }
         }
         static void test()

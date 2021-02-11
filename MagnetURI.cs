@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
 using System.Web;
@@ -22,23 +23,53 @@ namespace MagnetTools
         }
         
         public void setLink(string magnetLink){
+            string trackersOnly,nameAndTrackers = string.Empty;
+
             if(!magnetLink.Contains(_prefix) || !magnetLink.Contains(_dn))
             {
-                Console.WriteLine("Invalid link");
+                Console.WriteLine("invalid link");
                 return;
             }
             trackers = new List<String>();
-            this.hash = magnetLink.Substring(_prefix.Length, _hashLength);
-            string nameAndTrackers = magnetLink.Substring(_prefix.Length + _hashLength + _dn.Length);
-            nameAndTrackers = HttpUtility.UrlDecode(nameAndTrackers);
+            try
+            {
+                this.hash = magnetLink.Substring(_prefix.Length, _hashLength);
+                if(!Regex.IsMatch(hash,"^[a-zA-Z0-9]*$")){
+                    // throw new Exception("invalid hash");
+                    Console.WriteLine("invalid hash");
+                }
+            }
+            catch
+            {
+                Console.WriteLine("invalid link");
+                return;
+            }
+            try
+            {
+                nameAndTrackers = magnetLink.Substring(_prefix.Length + _hashLength + _dn.Length);
+                nameAndTrackers = HttpUtility.UrlDecode(nameAndTrackers);
+            }
+            catch
+            {
+                Console.WriteLine("invalid link");
+                return;
+            }
             if (!nameAndTrackers.Contains(_tr))
             {
                 this.name = nameAndTrackers;
             }
             else
             {
-                this.name = nameAndTrackers.Substring(0, nameAndTrackers.IndexOf(_tr));
-                string trackersOnly = nameAndTrackers.Substring(this.name.Length);
+                try
+                {
+                    this.name = nameAndTrackers.Substring(0, nameAndTrackers.IndexOf(_tr));
+                    trackersOnly = nameAndTrackers.Substring(this.name.Length);
+                }
+                catch
+                {
+                    Console.WriteLine("invalid link");
+                    return;
+                }
                 foreach (string trackerURL in trackersOnly.Split(_tr))
                 {
                     if (!string.IsNullOrWhiteSpace(trackerURL))
@@ -46,7 +77,6 @@ namespace MagnetTools
                         this.trackers.Add(trackerURL);
                     }
                 }
-
             }
         }
         public override string ToString(){
@@ -57,21 +87,34 @@ namespace MagnetTools
             return HttpUtility.UrlEncode(uri);
         }
         public void printReadout(){
-            Console.WriteLine();
-            Console.WriteLine("Name: {0}", name);
-            Console.WriteLine("Hash: {0}", hash);
-            Console.WriteLine();
-            Console.WriteLine("Trackers:");
-            foreach(string tr in trackers){
-                Console.WriteLine(tr);
+            if (!string.IsNullOrWhiteSpace(this.hash))
+            {
+                Console.WriteLine();
+                Console.WriteLine("Name: {0}", name);
+                Console.WriteLine("Hash: {0}", hash);
+                Console.WriteLine();
+                Console.WriteLine("Trackers:");
+                foreach (string tr in trackers)
+                {
+                    Console.WriteLine(tr);
+                }
+                Console.WriteLine();
+                printJson();
             }
-            Console.WriteLine();
-            //Console.WriteLine(this.ToString());
-            printJson();
+            else
+            {
+                Console.WriteLine("no data");
+            }
         }
         public void printJson(){
-            Console.WriteLine(string.Format("{{name: {0}, hash: {1}}}", name, hash));
+            if (!string.IsNullOrWhiteSpace(this.hash))
+            {
+                Console.WriteLine(string.Format("{{name: {0}, hash: {1}}},", name, hash));
+            }
+            else
+            {
+                Console.WriteLine("no data");
+            }
         }
-
     }
 }
