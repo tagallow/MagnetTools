@@ -109,7 +109,7 @@ namespace MagnetTools
         public void printJson(){
             if (!string.IsNullOrWhiteSpace(this.hash))
             {
-                Console.WriteLine(string.Format("{{name: {0}, hash: {1}}},", name, hash));
+                Console.WriteLine(string.Format("{{name: \"{0}\", hash: \"{1}\"}},", name, hash));
             }
             else
             {
